@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>One-to-One Chat</title>
+  </head>
+  <body>
+    <h1>Private Chat</h1>
+
+    <label>Enter Your Username:</label>
+    <input type="text" id="username" />
+    <button id="registerBtn">Register</button>
+    
+    <hr />
+
+    <label>Send to (Username):</label>
+    <input type="text" id="recipient" placeholder="Enter recipient username" />
+    <input type="text" id="message" placeholder="Enter Message" />
+    <button id="sendBtn">Send</button>
+    
+    <h2>Messages:</h2>
+    <div id="messages"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const registerBtn = document.getElementById("registerBtn");
+      const usernameInput = document.getElementById("username");
+      const recipientInput = document.getElementById("recipient");
+      const messageInput = document.getElementById("message");
+      const sendBtn = document.getElementById("sendBtn");
+      const allMessages = document.getElementById("messages");
+
+      let username = "";
+
+      // Register user
+      registerBtn.addEventListener("click", () => {
+        username = usernameInput.value.trim();
+        if (username) {
+          socket.emit("register", username);
+          alert(`Registered as: ${username}`);
+        }
+      });
+
+      // Send private message
+      sendBtn.addEventListener("click", () => {
+        const recipient = recipientInput.value.trim();
+        const message = messageInput.value.trim();
+        if (recipient && message && username) {
+          socket.emit("private-message", { sender: username, recipient, message });
+          messageInput.value = "";
+        }
+      });
+
+      // Receive private message
+      socket.on("receive-message", ({ sender, message }) => {
+        const p = document.createElement("p");
+        p.innerText = `${sender}: ${message}`;
+        allMessages.appendChild(p);
+      });
+
+      // Handle errors
+      socket.on("error-message", (errorMsg) => {
+        alert(errorMsg);
+      });
+    </script>
+  </body>
+</html>
